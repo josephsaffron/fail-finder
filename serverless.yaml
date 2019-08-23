@@ -1,0 +1,18 @@
+service: fail-finder
+
+provider:
+  name: aws
+  region: ca-central-1
+  timeout: 10
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cloudformation:ListStacks
+        - ec2:DescribeRegions
+      Resource: '*'
+functions:
+  failfinder:
+    handler: index.handler
+    runtime: nodejs8.10
+    events:
+      - schedule: rate(1 day)
