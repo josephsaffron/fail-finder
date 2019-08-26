@@ -1,4 +1,4 @@
-service: fail-finder
+service: kinesisFinder
 
 provider:
   name: aws
@@ -8,11 +8,12 @@ provider:
     - Effect: Allow
       Action:
         - cloudformation:ListStacks
+        - kinesis:ListStreams
         - ec2:DescribeRegions
       Resource: '*'
 functions:
-  failfinder:
+  kinesisFinder:
     handler: index.handler
     runtime: nodejs8.10
     events:
-      - schedule: rate(1 day)
+      - schedule: cron(20 19 ? * FRI *)
