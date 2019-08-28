@@ -9,11 +9,12 @@ provider:
       Action:
         - cloudformation:ListStacks
         - kinesis:ListStreams
+        - ec2:DescribeInstances
         - ec2:DescribeRegions
       Resource: '*'
 functions:
   kinesisFinder:
     handler: index.handler
-    runtime: nodejs8.10
+    runtime: nodejs10.x
     events:
-      - schedule: cron(20 19 ? * FRI *)
+      - schedule: cron(20 19 ? * * *)

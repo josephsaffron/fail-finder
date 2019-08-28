@@ -12,6 +12,7 @@
     "aws-sdk": "^2.517.0"
   },
   "dependencies": {
+    "flatmap": "0.0.3",
     "node-fetch": "^2.6.0"
   }
 }
