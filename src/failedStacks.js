@@ -12,7 +12,9 @@ module.exports = async function(event, context) {
 	for (let region of regionNames) {
 		AWS.config.update({region});
 		const cfn = new AWS.CloudFormation();
-		const failedStacks = await cfn.listStacks().promise();
+		const failedStacks = await cfn.listStacks({StackStatusFilter: [
+			'CREATE_FAILED', 'ROLLBACK_FAILED', 'DELETE_FAILED',
+		]}).promise();
 		failedStackInfo.push( ...failedStacks.StackSummaries.map( x => `Stack named ${x.StackName} in ${region} with status ${x.StackStatus}`));
 	}
 	const url = process.env.SLACK_HOOK_URL;
