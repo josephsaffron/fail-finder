@@ -9,9 +9,11 @@ phases:
   pre_build:
     commands:
       - echo "pre_build step"
+      - npm ci
   build:
     commands:
       - echo "build command"
+      - sls deploy --stage prd
   post_build:
     commands:
       - echo "post_build step"
