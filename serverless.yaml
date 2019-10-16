@@ -3,7 +3,7 @@ service: kinesisFinder
 provider:
   name: aws
   region: ca-central-1
-  timeout: 10
+  timeout: 20
   iamRoleStatements:
     - Effect: Allow
       Action:

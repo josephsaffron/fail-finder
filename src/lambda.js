@@ -1,5 +1,4 @@
 const fetch = require('node-fetch');
-const flatMap = require('flatmap');
 module.exports = async function( postToSlack, profile ) {
 	const AWS = require('aws-sdk');
 	const credentials = new AWS.SharedIniFileCredentials({profile});
@@ -11,17 +10,30 @@ module.exports = async function( postToSlack, profile ) {
 	const alertInfo = [];
 	for (let region of regionNames) {
 		AWS.config.update({region});
-		const kinesis = new AWS.Kinesis();
-		const kinesisStacks = await kinesis.listStreams().promise();
-		alertInfo.push( ...kinesisStacks.StreamNames.map( x => `Kinesis Stream named ${x} running in ${region}`));
-		const ec2 = new AWS.EC2();
-		const ec2Instances = await ec2.describeInstances().promise();
-		alertInfo.push( ...flatMap(ec2Instances.Reservations, x=> x.Instances ).map( x=> `EC2 Instance named ${x.KeyName} running in ${x.Placement.AvailabilityZone}`));
-	}
-	const s3 = new AWS.S3();
-		const buckets = await s3.listBuckets().promise();
-		alertInfo.push( ...buckets.Buckets.map( x => `bucket named ${x.Name} created on ${x.CreationDate}`));
+		const lambda = new AWS.Lambda();
+		const lFunctions = await lambda.listFunctions().promise();
 
+		const fns = lFunctions.Functions
+			// .filter(
+			// 	x => x.FunctionName.indexOf('cr0') >= 0 
+			// 		|| x.FunctionName.indexOf('sample') >= 0
+			// 		|| x.FunctionName.indexOf('hello') >= 0
+			// 		|| x.FunctionName.indexOf('US108124') >= 0
+			// 	) 
+			.map( x=> {
+				return {functionName: x.FunctionName}
+			});
+		
+		if (fns.length > 0) {
+			console.log(region);
+		}
+		fns.forEach( async x => {
+				//await log.deleteLogGroup(x).promise();
+				console.log(x);
+			});
+		// alertInfo.push(...groups);
+		
+	}
 	const url = process.env.SLACK_HOOK_URL;
 	const channel = process.env.SLACK_CHANNEL || 'idp-hulk';
 	const account = process.env.AWS_ACCOUNT_NAME || 'DevHulk';
@@ -31,6 +43,6 @@ module.exports = async function( postToSlack, profile ) {
 			 body: `${JSON.stringify({channel: `#${channel}`, username: "Watcher", text: `${account}:\n ${alertInfo.join('\n')}`, icon_emoji: ":ghost:"})}`
 		});
 	}
-	console.log(alertInfo);
+	
 	return;
 }
