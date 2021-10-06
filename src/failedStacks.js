@@ -1,4 +1,4 @@
-
+const flatMap = require('flatmap');
 const fetch = require('node-fetch');
 //const credentials = new AWS.SharedIniFileCredentials({profile: 'default'});
 //AWS.config.credentials = credentials;
@@ -14,16 +14,24 @@ module.exports = async function(event, context, profile) {
 	const regionNames = regions.Regions.map( x=> x.RegionName );
 	const failedStackInfo = [];
 	for (let region of regionNames) {
-		AWS.config.update({region});
-		const cfn = new AWS.CloudFormation();
-		const failedStacks = await cfn.listStacks({StackStatusFilter: [
-			'CREATE_FAILED', 'ROLLBACK_FAILED', 'DELETE_FAILED',
-			//'CREATE_COMPLETE', 'UPDATE_COMPLETE'
-		]}).promise();
-		//failedStackInfo.push( ...failedStacks.StackSummaries.map( x => `Stack named ${x.StackName} in ${region} with status ${x.StackStatus}`));
-		if (failedStacks.StackSummaries.length > 0){
-			console.log(region);
-			failedStacks.StackSummaries.forEach( x=> console.log(x.StackName));
+		try {
+			AWS.config.update({region});
+			const cfn = new AWS.CloudFormation();
+			const failedStacks = await cfn.listStacks({StackStatusFilter: [
+				'CREATE_FAILED', 'ROLLBACK_FAILED', 'DELETE_FAILED',
+				//'CREATE_COMPLETE', 'UPDATE_COMPLETE'
+			]}).promise();
+			//failedStackInfo.push( ...failedStacks.StackSummaries.map( x => `Stack named ${x.StackName} in ${region} with status ${x.StackStatus}`));
+			if (failedStacks.StackSummaries.length > 0){
+				console.log(region);
+				failedStacks.StackSummaries.forEach( x=> console.log(x.StackName));
+			}
+			const ec2 = new AWS.EC2();
+			const ec2Instances = await ec2.describeInstances().promise();
+			console.log( ...flatMap(ec2Instances.Reservations, x=> x.Instances ).map( x=> `EC2 Instance named ${x.ImageId} running in ${x.Placement.AvailabilityZone}\n`));
+		} catch(err) {
+			console.log(`error with region ${region}`);
+			//console.log(err);
 		}
 	}
 	const url = process.env.SLACK_HOOK_URL;
